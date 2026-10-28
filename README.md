@@ -3,7 +3,7 @@
 **Décris. Construis. Automatise.**  
 Open-source workflow automation for everyone.
 
-FlowMind est une interface de workflows responsive, disponible sur le web et sous forme d’application Android. Le projet est un MVP : les workflows créés restent en mémoire dans la session du navigateur et le bouton « Tester » lance uniquement une simulation. Aucune intégration externe ni action réelle n’est exécutée.
+FlowMind est une interface de workflows responsive, disponible sur le web et sous forme d’application Android. Le projet est un MVP : les workflows sont sauvegardés localement dans le navigateur sur l’appareil utilisé et le bouton « Tester » lance uniquement une simulation. Aucune intégration externe ni action réelle n’est exécutée.
 
 ## Essayer FlowMind
 
@@ -44,7 +44,7 @@ L’APK initial généré par ce workflow est un **APK debug** destiné aux essa
 ## État du MVP
 
 - Tableau de bord responsive.
-- Création de workflows dans la session en cours.
+- Création de workflows avec sauvegarde locale dans le navigateur.
 - Recherche et simulation explicitement signalée.
 - Déploiement web et empaquetage Android automatisés.
 
