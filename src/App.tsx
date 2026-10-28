@@ -57,7 +57,16 @@ export default function App() {
   const [editStatus, setEditStatus] = useState<Flow["status"]>("Brouillon");
   const [panel, setPanel] = useState<"history" | "settings" | "ai" | "integrations" | null>(null);
   const [history, setHistory] = useState<{id:number; name:string; time:string; result:string}[]>(() => {
-    try { const raw = localStorage.getItem("flowmind:history:v1"); return raw ? JSON.parse(raw) : []; } catch { return []; }
+    try {
+      const raw = window.localStorage.getItem("flowmind:history:v1");
+      const parsed: unknown = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(parsed)) return [];
+      return parsed.filter((item): item is {id:number; name:string; time:string; result:string} =>
+        item !== null && typeof item === "object" &&
+        typeof item.id === "number" && typeof item.name === "string" &&
+        typeof item.time === "string" && typeof item.result === "string"
+      );
+    } catch { return []; }
   });
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
 
