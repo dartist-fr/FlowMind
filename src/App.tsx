@@ -50,6 +50,16 @@ export default function App() {
   const [creating, setCreating] = useState(false);
   const [notice, setNotice] = useState("");
   const [navOpen, setNavOpen] = useState(false);
+  const [editing, setEditing] = useState<Flow | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editSteps, setEditSteps] = useState("1");
+  const [editStatus, setEditStatus] = useState<Flow["status"]>("Brouillon");
+  const [panel, setPanel] = useState<"history" | "settings" | "ai" | "integrations" | null>(null);
+  const [history, setHistory] = useState<{id:number; name:string; time:string; result:string}[]>(() => {
+    try { const raw = localStorage.getItem("flowmind:history:v1"); return raw ? JSON.parse(raw) : []; } catch { return []; }
+  });
+  const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
 
   const visible = useMemo(() => flows.filter((flow) => {
     const matchesQuery = `${flow.name} ${flow.description}`.toLowerCase().includes(query.toLowerCase());
@@ -86,6 +96,34 @@ export default function App() {
       notify("Impossible de sauvegarder localement : le stockage du navigateur est indisponible.");
     }
   }, [flows]);
+
+  useEffect(() => {
+    try { localStorage.setItem("flowmind:history:v1", JSON.stringify(history.slice(0, 100))); } catch { /* local storage may be unavailable */ }
+  }, [history]);
+
+  function startEdit(flow: Flow) {
+    setEditing(flow); setEditName(flow.name); setEditDescription(flow.description);
+    setEditSteps(String(flow.steps)); setEditStatus(flow.status); setCreating(false);
+  }
+  function saveEdit() {
+    if (!editing || !editName.trim()) return;
+    setFlows(current => current.map(flow => flow.id === editing.id ? {
+      ...flow, name: editName.trim(), description: editDescription.trim(),
+      steps: Math.max(1, Math.min(50, Number(editSteps) || 1)), status: editStatus, updated: "À l’instant"
+    } : flow));
+    setEditing(null); notify("Workflow modifié et sauvegardé sur cet appareil.");
+  }
+  function runSimulation(flow: Flow) {
+    const time = new Date().toLocaleString("fr-FR");
+    setHistory(current => [{ id: Date.now(), name: flow.name, time, result: "Simulation terminée — aucune action externe exécutée" }, ...current].slice(0, 100));
+    notify(`Simulation de « ${flow.name} » enregistrée dans l’historique.`);
+  }
+  function deleteFlow(id: number) {
+    const flow = flows.find(item => item.id === id);
+    setFlows(current => current.filter(item => item.id !== id));
+    setConfirmDelete(null);
+    if (flow) notify(`Workflow « ${flow.name} » supprimé.`);
+  }
 
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
@@ -125,13 +163,13 @@ export default function App() {
         <nav className="nav-list" aria-label="Navigation principale">
           <a className="nav-link active" href="#dashboard" onClick={() => setNavOpen(false)}><LayoutDashboard size={17} />Vue d’ensemble</a>
           <a className="nav-link" href="#workflows" onClick={() => setNavOpen(false)}><Workflow size={17} />Mes workflows<span className="nav-count">{flows.length}</span></a>
-          <a className="nav-link" href="#activity" onClick={(event) => { event.preventDefault(); notify("L’historique sera disponible avec le moteur d’exécution."); }}><Activity size={17} />Historique</a>
+          <button className="nav-link nav-action" onClick={() => setPanel("history")}><Activity size={17} />Historique<span className="nav-count">{history.length}</span></button>
         </nav>
 
         <p className="nav-label nav-label-tools">OUTILS</p>
         <nav className="nav-list" aria-label="Outils">
-          <a className="nav-link" href="#assistant" onClick={(event) => { event.preventDefault(); notify("L’assistant IA est prévu dans une prochaine version."); }}><Sparkles size={17} />Assistant IA<span className="nav-soon">BIENTÔT</span></a>
-          <a className="nav-link" href="#integrations" onClick={(event) => { event.preventDefault(); notify("Les intégrations ne sont pas encore activées."); }}><GitBranch size={17} />Intégrations</a>
+          <button className="nav-link nav-action" onClick={() => setPanel("ai")}><Sparkles size={17} />Assistant IA<span className="nav-soon">À VENIR</span></button>
+          <button className="nav-link nav-action" onClick={() => setPanel("integrations")}><GitBranch size={17} />Intégrations<span className="nav-soon">À VENIR</span></button>
         </nav>
 
         <div className="sidebar-bottom">
@@ -140,7 +178,7 @@ export default function App() {
             <span><b>Mode local</b><small>Sans API payante</small></span>
             <i aria-label="Actif" />
           </div>
-          <a className="nav-link settings-link" href="#settings" onClick={(event) => { event.preventDefault(); notify("Les paramètres seront ajoutés prochainement."); }}><Settings2 size={17} />Paramètres</a>
+          <button className="nav-link nav-action settings-link" onClick={() => setPanel("settings")}><Settings2 size={17} />Paramètres</button>
           <div className="profile">
             <span className="avatar">D</span>
             <span><b>Damien</b><small>Espace personnel</small></span>
@@ -241,7 +279,11 @@ export default function App() {
                   <p>{flow.description}</p>
                   <div className="flow-meta"><span><GitBranch size={13} />{flow.steps} étapes</span><span className="meta-separator">·</span><span><Clock3 size={13} />{flow.updated}</span></div>
                 </div>
-                <button className="run-btn" onClick={() => notify(`Simulation de « ${flow.name} » lancée. Aucune action externe exécutée.`)}><Play size={13} fill="currentColor" />Tester</button>
+                <div className="flow-actions">
+                  <button className="run-btn" onClick={() => runSimulation(flow)}><Play size={13} fill="currentColor" />Tester</button>
+                  <button className="mini-action" onClick={() => startEdit(flow)} aria-label={`Modifier ${flow.name}`} title="Modifier"><Settings2 size={15} /></button>
+                  <button className="mini-action danger-action" onClick={() => setConfirmDelete(flow.id)} aria-label={`Supprimer ${flow.name}`} title="Supprimer"><X size={15} /></button>
+                </div>
               </article>)}
               {visible.length === 0 && <div className="empty-state"><span><Search size={22} /></span><b>Aucun workflow trouvé</b><p>Modifie ta recherche ou crée une nouvelle automatisation.</p><button className="secondary" onClick={() => { setQuery(""); setFilter("Tous"); }}>Réinitialiser les filtres</button></div>}
             </div>
@@ -257,15 +299,29 @@ export default function App() {
         </div>
       </main>
 
-      {creating && <div className="modal-bg" onMouseDown={(event) => { if (event.target === event.currentTarget) setCreating(false); }}>
+      {(creating || editing) && <div className="modal-bg" onMouseDown={(event) => { if (event.target === event.currentTarget) { setCreating(false); setEditing(null); } }}>
         <section className="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-          <div className="modal-top"><span className="modal-icon"><Workflow size={20} /></span><button className="icon-btn" onClick={() => setCreating(false)} aria-label="Fermer"><X size={18} /></button></div>
-          <span className="modal-kicker">FLOWMIND STUDIO</span><h2 id="modal-title">Une nouvelle idée ?</h2><p>Donne un nom à ton workflow. Tu pourras ensuite définir les étapes à automatiser.</p>
-          <label htmlFor="flow-name">Nom du workflow</label><input id="flow-name" autoFocus value={name} onChange={(event) => setName(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") createFlow(); }} placeholder="Ex. Organiser mes notes" />
-          <small className="modal-hint"><ShieldCheck size={14} />Enregistré localement sur cet appareil.</small>
-          <div className="modal-actions"><button className="secondary" onClick={() => setCreating(false)}>Annuler</button><button className="primary" disabled={!name.trim()} onClick={createFlow}><Plus size={16} />Créer le workflow</button></div>
+          <div className="modal-top"><span className="modal-icon"><Workflow size={20} /></span><button className="icon-btn" onClick={() => { setCreating(false); setEditing(null); }} aria-label="Fermer"><X size={18} /></button></div>
+          <span className="modal-kicker">FLOWMIND STUDIO</span><h2 id="modal-title">{editing ? "Modifier le workflow" : "Une nouvelle idée ?"}</h2>
+          <p>{editing ? "Modifie les informations et enregistre tes changements." : "Crée un workflow. Les étapes sont une configuration descriptive : elles ne lancent pas encore d’actions réelles."}</p>
+          <label htmlFor="flow-name">{editing ? "Nom" : "Nom du workflow"}</label>
+          <input id="flow-name" autoFocus value={editing ? editName : name} onChange={(event) => editing ? setEditName(event.target.value) : setName(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") editing ? saveEdit() : createFlow(); }} placeholder="Ex. Organiser mes notes" />
+          {editing && <>
+            <label htmlFor="flow-description">Description</label><textarea id="flow-description" value={editDescription} onChange={event => setEditDescription(event.target.value)} rows={3} />
+            <label htmlFor="flow-steps">Nombre d’étapes (1–50)</label><input id="flow-steps" type="number" min="1" max="50" value={editSteps} onChange={event => setEditSteps(event.target.value)} />
+            <label htmlFor="flow-status">Statut</label><select id="flow-status" value={editStatus} onChange={event => setEditStatus(event.target.value as Flow["status"])}><option value="Brouillon">Brouillon</option><option value="Actif">Actif (simulation disponible)</option></select>
+          </>}
+          <small className="modal-hint"><ShieldCheck size={14} />Sauvegardé localement sur cet appareil.</small>
+          <div className="modal-actions"><button className="secondary" onClick={() => { setCreating(false); setEditing(null); }}>Annuler</button><button className="primary" disabled={!(editing ? editName.trim() : name.trim())} onClick={editing ? saveEdit : createFlow}>{editing ? <Check size={16} /> : <Plus size={16} />}{editing ? "Enregistrer" : "Créer le workflow"}</button></div>
         </section>
       </div>}
+      {confirmDelete !== null && <div className="modal-bg"><section className="modal" role="alertdialog" aria-modal="true"><h2>Supprimer ce workflow ?</h2><p>Cette suppression est définitive sur cet appareil.</p><div className="modal-actions"><button className="secondary" onClick={() => setConfirmDelete(null)}>Annuler</button><button className="primary danger-primary" onClick={() => deleteFlow(confirmDelete)}>Supprimer</button></div></section></div>}
+      {panel && <div className="modal-bg" onMouseDown={event => { if (event.target === event.currentTarget) setPanel(null); }}><section className="modal panel-modal" role="dialog" aria-modal="true" aria-labelledby="panel-title"><div className="modal-top"><span className="modal-icon"><Settings2 size={20} /></span><button className="icon-btn" onClick={() => setPanel(null)} aria-label="Fermer"><X size={18} /></button></div>
+        {panel === "history" && <><span className="modal-kicker">JOURNAL LOCAL</span><h2 id="panel-title">Historique des tests</h2><p>Les simulations récentes sont enregistrées sur cet appareil. Elles ne correspondent pas à des exécutions réelles.</p>{history.length === 0 ? <div className="empty-state"><b>Aucun test pour le moment</b><p>Lance « Tester » sur un workflow pour ajouter une entrée ici.</p></div> : <div className="history-list">{history.map(item => <article className="history-entry" key={item.id}><b>{item.name}</b><small>{item.time}</small><p>{item.result}</p></article>)}</div>}<div className="modal-actions"><button className="secondary" onClick={() => { setHistory([]); notify("Historique effacé."); }}>Effacer l’historique</button><button className="primary" onClick={() => setPanel(null)}>Fermer</button></div></>}
+        {panel === "settings" && <><span className="modal-kicker">PRÉFÉRENCES</span><h2 id="panel-title">Paramètres et données</h2><p>FlowMind fonctionne actuellement sans compte : les données restent dans le stockage local de ce navigateur.</p><div className="settings-summary"><p><b>{flows.length}</b> workflow(s) enregistré(s)</p><p><b>{history.length}</b> entrée(s) d’historique</p><p>Stockage : localStorage du navigateur</p></div><div className="modal-actions"><button className="secondary" onClick={() => { if (confirm("Effacer tous les workflows et l’historique de cet appareil ? Cette action est irréversible.")) { setFlows([]); setHistory([]); notify("Données locales effacées."); } }}>Effacer toutes les données</button><button className="primary" onClick={() => setPanel(null)}>Fermer</button></div></>}
+        {panel === "ai" && <><span className="modal-kicker">ASSISTANT IA</span><h2 id="panel-title">Pas encore connecté</h2><p>L’assistant IA n’est pas implémenté dans cette version. Aucun modèle n’est appelé et aucune donnée n’est envoyée à un service externe.</p><p>Une future version pourra proposer un modèle local ou une intégration configurée par l’utilisateur.</p><div className="modal-actions"><button className="primary" onClick={() => setPanel(null)}>Compris</button></div></>}
+        {panel === "integrations" && <><span className="modal-kicker">CONNECTEURS</span><h2 id="panel-title">Intégrations indisponibles</h2><p>Aucun service externe n’est actuellement connecté. Les workflows ne peuvent donc pas envoyer d’e-mails, modifier des fichiers ou déclencher d’actions dans d’autres applications.</p><p>Cette section sera activée quand des connecteurs réels et leurs autorisations seront développés.</p><div className="modal-actions"><button className="primary" onClick={() => setPanel(null)}>Compris</button></div></>}
+      </section></div>}
 
       {notice && <div className="toast" role="status"><span className="toast-check"><Check size={15} /></span><span>{notice}</span><button onClick={() => setNotice("")} aria-label="Fermer"><X size={15} /></button></div>}
     </div>
