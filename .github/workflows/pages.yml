@@ -32,6 +32,12 @@ jobs:
         run: npm run build
         env:
           GITHUB_PAGES: "true"
+      - name: Verify production output
+        run: |
+          test -f dist/index.html
+          grep -q '/FlowMind/assets/' dist/index.html
+          ! grep -q 'src/main.tsx' dist/index.html
+          ! grep -q '%BASE_URL%' dist/index.html
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload site artifact
