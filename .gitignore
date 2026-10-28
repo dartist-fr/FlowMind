@@ -147,3 +147,9 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# FlowMind local build
+*.local
+.env
+.env.*
+!.env.example
