@@ -2,6 +2,7 @@ name: Build Android APK and publish release
 
 on:
   push:
+    branches: [main]
     tags:
       - "v*"
   workflow_dispatch:
@@ -45,9 +46,11 @@ jobs:
           name: FlowMind-Android-APK
           path: FlowMind-*.apk
       - name: Publish GitHub Release
-        if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/') || github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          name: FlowMind ${{ github.ref_name }}
+          tag_name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || 'nightly' }}
+          name: ${{ startsWith(github.ref, 'refs/tags/') && format('FlowMind {0}', github.ref_name) || 'FlowMind nightly build' }}
+          prerelease: ${{ github.ref == 'refs/heads/main' }}
           generate_release_notes: true
           files: FlowMind-*.apk
