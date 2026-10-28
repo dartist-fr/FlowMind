@@ -39,7 +39,7 @@ export default function App() {
         typeof item.steps === "number" &&
         typeof item.updated === "string"
       );
-      return valid.length ? valid : initialFlows;
+      return valid;
     } catch {
       return initialFlows;
     }
