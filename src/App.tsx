@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import {
   Activity, ArrowDownRight, ArrowRight, Bot, Check, ChevronDown, Clock3,
-  Command, GitBranch, LayoutDashboard, Menu, Play, Plus, Search, Settings2,
+  GitBranch, LayoutDashboard, Menu, Play, Plus, Search, Settings2,
   ShieldCheck, Sparkles, Workflow, X, Zap
 } from "lucide-react";
 
