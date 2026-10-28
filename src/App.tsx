@@ -144,6 +144,9 @@ export default function App() {
       }
       if (event.key === "Escape") {
         setCreating(false);
+        setEditing(null);
+        setPanel(null);
+        setConfirmDelete(null);
         setNavOpen(false);
       }
     }
