@@ -1,0 +1,13 @@
+{
+  "id": "/",
+  "name": "FlowMind — Workflow Studio",
+  "short_name": "FlowMind",
+  "description": "Décris. Construis. Automatise.",
+  "lang": "fr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#111318",
+  "theme_color": "#111318",
+  "orientation": "any"
+}
