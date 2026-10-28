@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Activity, ArrowDownRight, ArrowRight, Bot, Check, ChevronDown, Clock3,
   GitBranch, LayoutDashboard, Menu, Play, Plus, Search, Settings2,
@@ -23,7 +23,27 @@ const initialFlows: Flow[] = [
 type Filter = "Tous" | "Actifs" | "Brouillons";
 
 export default function App() {
-  const [flows, setFlows] = useState(initialFlows);
+  const [flows, setFlows] = useState<Flow[]>(() => {
+    try {
+      const saved = window.localStorage.getItem("flowmind:workflows:v1");
+      if (!saved) return initialFlows;
+      const parsed: unknown = JSON.parse(saved);
+      if (!Array.isArray(parsed)) return initialFlows;
+      const valid = parsed.filter((item): item is Flow =>
+        item !== null &&
+        typeof item === "object" &&
+        typeof item.id === "number" &&
+        typeof item.name === "string" &&
+        typeof item.description === "string" &&
+        (item.status === "Actif" || item.status === "Brouillon") &&
+        typeof item.steps === "number" &&
+        typeof item.updated === "string"
+      );
+      return valid.length ? valid : initialFlows;
+    } catch {
+      return initialFlows;
+    }
+  });
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<Filter>("Tous");
   const [name, setName] = useState("");
@@ -56,8 +76,33 @@ export default function App() {
     setFilter("Tous");
     setQuery("");
     setCreating(false);
-    notify("Workflow ajouté à cette session.");
+    notify("Workflow enregistré sur cet appareil.");
   }
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem("flowmind:workflows:v1", JSON.stringify(flows));
+    } catch {
+      notify("Impossible de sauvegarder localement : le stockage du navigateur est indisponible.");
+    }
+  }, [flows]);
+
+  useEffect(() => {
+    function onKeyDown(event: KeyboardEvent) {
+      const target = event.target as HTMLElement | null;
+      const typing = target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target?.isContentEditable;
+      if ((event.key === "/" && !typing) || ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k")) {
+        event.preventDefault();
+        document.getElementById("workflow-search")?.focus();
+      }
+      if (event.key === "Escape") {
+        setCreating(false);
+        setNavOpen(false);
+      }
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
   const activeCount = flows.filter((flow) => flow.status === "Actif").length;
 
@@ -136,7 +181,7 @@ export default function App() {
               <h2>Moins de répétition.<br /><em>Plus d’élan.</em></h2>
               <p>Transforme tes tâches répétitives en workflows simples, transparents et maîtrisés. Commence petit, avance à ton rythme.</p>
               <button className="hero-btn" onClick={() => setCreating(true)}>Créer une automatisation <ArrowRight size={16} /></button>
-              <div className="hero-note"><ShieldCheck size={14} /> Tes données restent dans cette session</div>
+              <div className="hero-note"><ShieldCheck size={14} /> Tes données restent sur cet appareil</div>
             </div>
             <div className="workflow-art" aria-hidden="true">
               <div className="art-grid" />
@@ -158,7 +203,7 @@ export default function App() {
             <article className="stat-card">
               <div className="stat-top"><span>Workflows créés</span><span className="stat-icon stat-purple"><Workflow size={17} /></span></div>
               <div className="stat-value">{flows.length}<span className="stat-trend"><ArrowDownRight size={13} /> espace perso</span></div>
-              <p>Dans cette session</p>
+              <p>Sur cet appareil</p>
               <div className="stat-progress"><span style={{ width: `${Math.min(flows.length * 12, 100)}%` }} /></div>
             </article>
             <article className="stat-card">
@@ -200,7 +245,7 @@ export default function App() {
               </article>)}
               {visible.length === 0 && <div className="empty-state"><span><Search size={22} /></span><b>Aucun workflow trouvé</b><p>Modifie ta recherche ou crée une nouvelle automatisation.</p><button className="secondary" onClick={() => { setQuery(""); setFilter("Tous"); }}>Réinitialiser les filtres</button></div>}
             </div>
-            <div className="panel-foot"><span>Affichage de <b>{visible.length}</b> sur <b>{flows.length}</b> workflows</span><span><span className="tiny-dot" /> Modifications non persistantes</span></div>
+            <div className="panel-foot"><span>Affichage de <b>{visible.length}</b> sur <b>{flows.length}</b> workflows</span><span><span className="tiny-dot" /> Sauvegarde locale activée</span></div>
           </section>
 
           <section className="bottom-cards">
@@ -217,7 +262,7 @@ export default function App() {
           <div className="modal-top"><span className="modal-icon"><Workflow size={20} /></span><button className="icon-btn" onClick={() => setCreating(false)} aria-label="Fermer"><X size={18} /></button></div>
           <span className="modal-kicker">FLOWMIND STUDIO</span><h2 id="modal-title">Une nouvelle idée ?</h2><p>Donne un nom à ton workflow. Tu pourras ensuite définir les étapes à automatiser.</p>
           <label htmlFor="flow-name">Nom du workflow</label><input id="flow-name" autoFocus value={name} onChange={(event) => setName(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter") createFlow(); }} placeholder="Ex. Organiser mes notes" />
-          <small className="modal-hint"><ShieldCheck size={14} />Créé localement dans cette session.</small>
+          <small className="modal-hint"><ShieldCheck size={14} />Enregistré localement sur cet appareil.</small>
           <div className="modal-actions"><button className="secondary" onClick={() => setCreating(false)}>Annuler</button><button className="primary" disabled={!name.trim()} onClick={createFlow}><Plus size={16} />Créer le workflow</button></div>
         </section>
       </div>}
