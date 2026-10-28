@@ -3,25 +3,19 @@
 **Décris. Construis. Automatise.**  
 Open-source workflow automation for everyone.
 
-FlowMind is an independent, mobile-friendly workflow studio. This repository starts with a responsive dashboard and a safe, local-first development setup.
+FlowMind est une interface de workflows responsive, disponible sur le web et sous forme d’application Android. Le projet est un MVP : les workflows créés restent en mémoire dans la session du navigateur et le bouton « Tester » lance uniquement une simulation. Aucune intégration externe ni action réelle n’est exécutée.
 
-> **Early MVP:** workflows created in the current interface exist only in the current browser session. The “Tester” action runs a clearly labelled simulation; no external service is contacted and no real-world action is executed.
+## Essayer FlowMind
 
-## Current starter
+- **Version web :** https://dartist-fr.github.io/FlowMind/
+- **Télécharger l’APK Android :** https://github.com/dartist-fr/FlowMind/releases
+- **Code source :** https://github.com/dartist-fr/FlowMind
 
-- Responsive dark interface with violet accents.
-- Dashboard with sample workflows, statuses and search.
-- Create a workflow in the current session.
-- Explicit simulation feedback.
-- Web app manifest as a foundation for installability.
+La première publication web peut prendre quelques minutes après l’activation de GitHub Pages dans les paramètres du dépôt (source « GitHub Actions »).
 
-Persistence, the visual node editor, a real execution engine, integrations and AI are not implemented yet.
+## Développement local
 
-## Requirements
-
-- Node.js LTS (npm is included).
-
-## Run locally
+Prérequis : Node.js 22 ou plus récent.
 
 ~~~bash
 git clone https://github.com/dartist-fr/FlowMind.git
@@ -30,46 +24,38 @@ npm install
 npm run dev
 ~~~
 
-Open the local URL printed by Vite, usually `http://localhost:5173`.
-
-## Open on Android over Wi-Fi
-
-1. Connect the computer and Android phone to the same Wi-Fi.
-2. Run `npm run dev` on the computer.
-3. Find the computer's Wi-Fi IPv4 address with `ipconfig` on Windows.
-4. Open `http://YOUR_COMPUTER_IP:5173` in Chrome on Android.
-5. Keep the computer and development server running.
-
-Replace `YOUR_COMPUTER_IP` with the real address. This is a local development server, not a public website, and it is not offline-capable yet.
-
-## Commands
+Pour vérifier le build de production :
 
 ~~~bash
-npm run dev       # Start the development server
-npm run build     # Type-check and build
-npm run preview   # Preview the production build
+npm run build
+npm run preview
 ~~~
 
-## Roadmap
+## Déploiement
 
-1. Foundation and responsive dashboard.
-2. Visual workflow editor with nodes, connections and validation.
-3. Local persistence and import/export.
-4. Safe simulation, step-by-step logs and error handling.
-5. PWA installation and offline assets.
-6. Integrations and optional AI, with explicit user approval.
+Le workflow `.github/workflows/pages.yml` construit l’application et la publie sur GitHub Pages à chaque push sur `main`.
 
-## Safety
+## Application Android
 
-- A simulation must never claim that an external action really happened.
-- Secrets must not be stored in workflow definitions or logs.
-- External actions must be validated and explicitly authorised.
-- AI, when added, will propose workflow drafts and will not bypass validation.
+Le workflow `.github/workflows/android-release.yml` construit l’application web, l’intègre dans une coquille Android via Capacitor et publie l’APK de test sur une GitHub Release à chaque tag `v*`. Pour lancer une publication, crée un tag, par exemple `v0.1.0`.
 
-## Contributing
+L’APK initial généré par ce workflow est un **APK debug** destiné aux essais et à l’installation manuelle. Ce n’est pas une version signée pour publication sur Google Play.
 
-Issues and pull requests are welcome. Never commit API keys, credentials, real `.env` files or private data.
+## État du MVP
 
-## License
+- Tableau de bord responsive.
+- Création de workflows dans la session en cours.
+- Recherche et simulation explicitement signalée.
+- Déploiement web et empaquetage Android automatisés.
 
-The repository was created with the intention of using the MIT License. Add a canonical `LICENSE` file before treating the repository as formally licensed.
+La sauvegarde persistante, l’éditeur visuel de nœuds, le moteur d’exécution réel, les intégrations et l’assistant IA ne sont pas encore implémentés.
+
+## Sécurité
+
+- Une simulation ne doit jamais prétendre qu’une action externe a réellement eu lieu.
+- Ne pas enregistrer de secrets dans les workflows ou les journaux.
+- Toute future action externe devra être validée et explicitement autorisée.
+
+## Licence
+
+MIT. Voir le fichier [LICENSE](LICENSE).
