@@ -43,12 +43,14 @@ L’APK initial généré par ce workflow est un **APK debug** destiné aux essa
 
 ## État du MVP
 
-- Tableau de bord responsive.
-- Création de workflows avec sauvegarde locale dans le navigateur.
-- Recherche et simulation explicitement signalée.
+- Tableau de bord responsive, recherche et filtres.
+- Création, modification et suppression de workflows, sauvegardés dans le navigateur de l’appareil.
+- Nombre d’étapes, description et statut modifiables (configuration descriptive, sans exécution de nœuds).
+- Historique local des simulations, avec date et indication explicite qu’aucune action externe n’a été exécutée.
+- Paramètres locaux permettant de consulter ou d’effacer les données de l’appareil.
 - Déploiement web et empaquetage Android automatisés.
 
-La sauvegarde persistante, l’éditeur visuel de nœuds, le moteur d’exécution réel, les intégrations et l’assistant IA ne sont pas encore implémentés.
+**Limites connues :** il n’existe pas de compte ni de synchronisation entre appareils. L’éditeur visuel de nœuds, le moteur d’exécution réel, les intégrations externes et l’assistant IA ne sont pas implémentés. Les entrées « Assistant IA » et « Intégrations » affichent maintenant clairement cette limite au lieu de laisser croire qu’elles sont opérationnelles. Le bouton « Tester » enregistre uniquement une simulation locale.
 
 ## Sécurité
 
