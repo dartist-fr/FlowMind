@@ -3,60 +3,82 @@
 **Décris. Construis. Automatise.**  
 Open-source workflow automation for everyone.
 
-FlowMind est une interface de workflows responsive, disponible sur le web et sous forme d’application Android. Le projet est un MVP : les workflows sont sauvegardés localement dans le navigateur sur l’appareil utilisé et le bouton « Tester » lance uniquement une simulation. Aucune intégration externe ni action réelle n’est exécutée.
+FlowMind est une interface de workflows responsive, disponible sur le web et sous forme d’application Android. Le projet est un **MVP** : les workflows sont sauvegardés localement dans le navigateur sur l’appareil utilisé et le bouton **Tester** lance une simulation. Aucune intégration externe ni action réelle n’est exécutée.
 
 ## Essayer FlowMind
 
 - **Version web :** https://dartist-fr.github.io/FlowMind/
-- **Télécharger l’APK Android :** https://github.com/dartist-fr/FlowMind/releases
+- **Dernière Release stable vérifiée :** [FlowMind 0.1.0](https://github.com/dartist-fr/FlowMind/releases/tag/v0.1.0)
+- **APK Android 0.1.0 :** [Télécharger FlowMind-v0.1.0.apk](https://github.com/dartist-fr/FlowMind/releases/download/v0.1.0/FlowMind-v0.1.0.apk)
+- **Toutes les versions :** https://github.com/dartist-fr/FlowMind/releases
 - **Code source :** https://github.com/dartist-fr/FlowMind
 
-La première publication web peut prendre quelques minutes après l’activation de GitHub Pages dans les paramètres du dépôt (source « GitHub Actions »).
+Les builds automatiques de la branche `main` peuvent être publiés dans une Release `nightly` préliminaire. Pour une installation plus stable, privilégie une version taguée et consulte ses notes de publication.
 
 ## Développement local
 
 Prérequis : Node.js 22 ou plus récent.
 
-~~~bash
+```bash
 git clone https://github.com/dartist-fr/FlowMind.git
 cd FlowMind
 npm install
 npm run dev
-~~~
+```
 
 Pour vérifier le build de production :
 
-~~~bash
+```bash
 npm run build
 npm run preview
-~~~
+```
 
-## Déploiement
+## Déploiement web
 
-Le workflow `.github/workflows/pages.yml` construit l’application et la publie sur GitHub Pages à chaque push sur `main`.
+Le workflow `.github/workflows/pages.yml` construit l’application et la publie sur GitHub Pages à chaque push sur `main`. Le workflow de CI effectue les contrôles configurés dans `.github/workflows/ci.yml`.
 
 ## Application Android
 
-Le workflow `.github/workflows/android-release.yml` construit l’application web, l’intègre dans une coquille Android via Capacitor et publie l’APK de test sur une GitHub Release à chaque tag `v*`. Pour lancer une publication, crée un tag, par exemple `v0.1.0`.
+Le workflow `.github/workflows/android-release.yml` :
+- utilise Node.js 22 et Java 21 ;
+- construit l’application web ;
+- génère le projet Android avec Capacitor ;
+- synchronise les ressources web ;
+- compile un APK debug ;
+- publie l’APK comme artefact et dans une Release.
 
-L’APK initial généré par ce workflow est un **APK debug** destiné aux essais et à l’installation manuelle. Ce n’est pas une version signée pour publication sur Google Play.
+Le workflow s’exécute sur les pushes de `main`, les tags `v*) et les lancements manuels. Les builds de la branche principale alimentent la Release préliminaire `nightly` ; un tag versionné déclenche une Release correspondante.
+
+**Important :** l’APK produit par le workflow actuel est un APK debug destiné aux essais et à l’installation manuelle. Ce n’est pas un APK de production signé pour une publication sur Google Play.
 
 ## État du MVP
 
-- Tableau de bord responsive, recherche et filtres.
-- Création, modification et suppression de workflows, sauvegardés dans le navigateur de l’appareil.
-- Nombre d’étapes, description et statut modifiables (configuration descriptive, sans exécution de nœuds).
-- Historique local des simulations, avec date et indication explicite qu’aucune action externe n’a été exécutée.
-- Paramètres locaux permettant de consulter ou d’effacer les données de l’appareil.
-- Déploiement web et empaquetage Android automatisés.
+Fonctions documentées dans la version actuelle :
 
-**Limites connues :** il n’existe pas de compte ni de synchronisation entre appareils. L’éditeur visuel de nœuds, le moteur d’exécution réel, les intégrations externes et l’assistant IA ne sont pas implémentés. Les entrées « Assistant IA » et « Intégrations » affichent maintenant clairement cette limite au lieu de laisser croire qu’elles sont opérationnelles. Le bouton « Tester » enregistre uniquement une simulation locale.
+- tableau de bord responsive, recherche et filtres ;
+- création, modification et suppression de workflows ;
+- sauvegarde locale dans le navigateur de l’appareil ;
+- nombre d’étapes, description et statut modifiables ;
+- historique local des simulations, avec indication qu’aucune action externe n’a été exécutée ;
+- paramètres locaux permettant de consulter ou d’effacer les données de l’appareil ;
+- déploiement web et empaquetage Android automatisés.
 
-## Sécurité
+**Limites connues :**
 
-- Une simulation ne doit jamais prétendre qu’une action externe a réellement eu lieu.
-- Ne pas enregistrer de secrets dans les workflows ou les journaux.
-- Toute future action externe devra être validée et explicitement autorisée.
+- pas de compte ni de synchronisation entre appareils ;
+- pas d’éditeur visuel de nœuds opérationnel ;
+- pas de moteur d’exécution réel ;
+- pas d’intégrations externes exécutées ;
+- pas d’assistant IA opérationnel ;
+- le bouton **Tester** enregistre uniquement une simulation locale.
+
+Les entrées d’interface qui présentent des fonctions non implémentées ne doivent pas être interprétées comme des intégrations disponibles.
+
+## Sécurité et données
+
+Les workflows et l’historique décrits dans ce MVP sont conservés localement sur l’appareil. Ne stocke pas de mots de passe, clés API ou autres secrets dans les workflows ou les journaux. Une simulation ne signifie jamais qu’une action externe a réellement eu lieu.
+
+Toute future intégration devra expliquer les données utilisées, demander les autorisations nécessaires et distinguer clairement une simulation d’une exécution réelle.
 
 ## Licence
 
